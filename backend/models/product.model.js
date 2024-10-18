@@ -55,7 +55,7 @@ const productSchema = new mongoose.Schema(
     numReviews: { type: Number, required: true, default: 0 },
     target: {
       type: String,
-      enum: ["Nam", "Nữ", "trẻ em"], // Specify the type
+      enum: ["Nam", "Nữ", "Trẻ em"], // Specify the type
       required: true,
     },
     category: {

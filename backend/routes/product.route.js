@@ -7,10 +7,11 @@ import {
   getProductById,
   updateProduct,
 } from "../controllers/product.controller.js";
+import { protect } from "../middlewares/checkAuth.js";
 
 const router = express.Router();
 
-router.route("/").post(createProduct).get(getAllProduct);
+router.route("/").post(createProduct).get(protect, getAllProduct);
 
 router
   .route("/:id")

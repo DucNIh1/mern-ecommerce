@@ -3,6 +3,7 @@ import {
   getMe,
   login,
   logout,
+  refresh,
   signup,
   updateMe,
 } from "../controllers/auth.controller.js";
@@ -19,6 +20,7 @@ const router = express.Router();
 
 router.post("/signup", signup);
 router.post("/login", login);
+router.get("/refresh", refresh);
 
 router.use(protect);
 router.put("/update-me", updateMe);

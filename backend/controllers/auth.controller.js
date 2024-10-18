@@ -6,18 +6,22 @@ import validator from "validator";
 import bcrypt from "bcryptjs";
 
 const generateToken = (res, user) => {
-  const token = jwt.sign({ id: user._id }, process.env.JWT_KEY, {
-    expiresIn: "30d", // 30 days
+  const accessToken = jwt.sign({ user: user }, process.env.JWT_KEY, {
+    expiresIn: "1d",
   });
 
-  res.cookie("jwt", token, {
-    maxAge: 60 * 60 * 1000 * 24 * 30, //30days
+  const refreshToken = jwt.sign({ user: user }, process.env.JWT_REFRESH_KEY, {
+    expiresIn: "30d",
+  });
+
+  res.cookie("jwt", refreshToken, {
+    maxAge: 60 * 60 * 1000 * 30, // 30days
     sameSite: "strict",
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
   });
 
-  return token;
+  return accessToken;
 };
 
 export const signup = catchAsync(async (req, res, next) => {
@@ -46,8 +50,10 @@ export const signup = catchAsync(async (req, res, next) => {
 
   const user = await User.create({ email, password, username });
   user.password = undefined;
-  generateToken(res, user);
-  res.status(200).json({ message: "Đăng kí tài khoản thành công", user });
+  const accessToken = generateToken(res, user);
+  res
+    .status(200)
+    .json({ message: "Đăng kí tài khoản thành công", accessToken, user });
 });
 
 export const login = catchAsync(async (req, res, next) => {
@@ -72,10 +78,10 @@ export const login = catchAsync(async (req, res, next) => {
     );
   }
 
-  generateToken(res, user);
+  const accessToken = generateToken(res, user);
   user.password = undefined;
 
-  res.status(200).json({ message: "Đăng nhập thành công", user: user });
+  res.status(200).json({ message: "Đăng nhập thành công", accessToken, user });
 });
 
 export const updateMe = catchAsync(async (req, res, next) => {
@@ -131,4 +137,50 @@ export const logout = (req, res, next) => {
     sameSite: "strict",
   });
   res.status(200).json({ message: "Đăng xuất thành công" });
+};
+
+export const refresh = (req, res) => {
+  console.log("refresh");
+  const cookies = req.cookies.jwt;
+
+  if (!cookies) {
+    return res
+      .status(401)
+      .json({ message: "Token không khả dụng hoặc không tồn tại" });
+  }
+
+  const refreshToken = cookies;
+
+  jwt.verify(
+    refreshToken,
+    process.env.JWT_REFRESH_KEY,
+    async (err, decoded) => {
+      if (err) {
+        return res.status(403).json({ message: "Token không hợp lệ" });
+      }
+      try {
+        const foundUser = await User.findById(decoded.user._id);
+
+        if (!foundUser) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        // Xóa password khỏi object người dùng trước khi tạo access token mới
+        foundUser.password = undefined;
+
+        const accessToken = jwt.sign(
+          {
+            user: foundUser,
+          },
+          process.env.JWT_KEY,
+          { expiresIn: "1d" }
+        );
+
+        return res.json({ accessToken, user: foundUser });
+      } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Internal Server Error" });
+      }
+    }
+  );
 };

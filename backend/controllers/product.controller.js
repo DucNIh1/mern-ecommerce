@@ -1,6 +1,7 @@
 import Product from "../models/product.model.js";
 import catchAsync from "../utils/catchAsync.js";
 import AppError from "../utils/AppError.js";
+import ApiFeature from "../utils/ApiFeature.js";
 
 export const createProduct = catchAsync(async (req, res, next) => {
   const { name, image, category, description, price, sizes, target } = req.body;
@@ -20,6 +21,16 @@ export const createProduct = catchAsync(async (req, res, next) => {
   const product = await Product.findOne({ name });
 
   if (product) return res.status(400).json({ message: "Sản phẩm đã tồn tại" });
+
+  // Hàm sắp xếp dựa trên thứ tự size mong muốn
+  const sizeOrder = ["s", "m", "l", "xl"];
+
+  sizes.sort((a, b) => {
+    return (
+      sizeOrder.indexOf(a.size.toLowerCase()) -
+      sizeOrder.indexOf(b.size.toLowerCase())
+    );
+  });
 
   const newProduct = await Product.create({
     name,
@@ -60,19 +71,41 @@ export const updateProduct = catchAsync(async (req, res, next) => {
 
   // Cập nhật số lượng cho size nếu có
   if (sizes && Array.isArray(sizes)) {
-    sizes.forEach((size) => {
-      const sizeIndex = product.sizes.findIndex(
-        (item) => item.size === size.size
+    sizes.forEach((newSize) => {
+      const existingSizeIndex = product.sizes.findIndex(
+        (s) => s.size === newSize.size
       );
-      if (sizeIndex !== -1) {
-        // Cập nhật quantity nếu size đã tồn tại
-        product.sizes[sizeIndex].quantity = size.quantity;
+
+      if (newSize.quantity === 0) {
+        // Nếu quantity = 0 thì xóa size
+        if (existingSizeIndex !== -1) {
+          product.sizes.splice(existingSizeIndex, 1);
+        }
       } else {
-        // Nếu size không tồn tại, thêm mới size vào danh sách
-        product.sizes.push(size);
+        if (existingSizeIndex !== -1) {
+          // Nếu size đã tồn tại, cập nhật quantity
+          product.sizes[existingSizeIndex].quantity = newSize.quantity;
+        } else {
+          // Nếu size chưa tồn tại, thêm mới
+          product.sizes.push({
+            size: newSize.size,
+            quantity: newSize.quantity,
+          });
+        }
       }
     });
   }
+
+  // Hàm sắp xếp dựa trên thứ tự size mong muốn
+  const sizeOrder = ["s", "m", "l", "xl"];
+
+  product.sizes.sort((a, b) => {
+    return (
+      sizeOrder.indexOf(a.size.toLowerCase()) -
+      sizeOrder.indexOf(b.size.toLowerCase())
+    );
+  });
+
   // Lưu lại sản phẩm đã cập nhật
   await product.save();
 
@@ -84,15 +117,46 @@ export const updateProduct = catchAsync(async (req, res, next) => {
 });
 
 export const getAllProduct = catchAsync(async (req, res, next) => {
-  const query = { isActive: true };
-  if (req.user && req.user.role === "admin") {
-    query = {};
-  }
-  const products = await Product.find(query);
+  let filter = { isActive: true };
 
-  res
-    .status(200)
-    .json({ message: "Lấy danh sách sản phẩm thành công", products });
+  if (req.user && req.user.role === "admin") {
+    filter = {};
+  }
+
+  const totalProducts = await Product.countDocuments();
+
+  const features = new ApiFeature(
+    Product.find(filter).populate("category"),
+    req.query
+  )
+    .filter()
+    .sort()
+    .selectFields()
+    .paginate();
+
+  // Lấy ra các sản phẩm theo query
+  const products = await features.query;
+  if (products.length <= 0) {
+    res.status(404).json({ message: "Không có sản phẩm nào" });
+  }
+  // Tính tổng số trang
+  const limit = +req.query.limit || 10; // Số lượng sản phẩm mỗi trang
+  const totalPages = Math.ceil(totalProducts / limit);
+
+  // Trang hiện tại
+  const currentPage = +req.query.page || 1;
+
+  if (currentPage > totalPages) {
+    return next(new AppError("Trang page này không tồn tại", 404));
+  }
+  // Trả về kết quả
+  res.status(200).json({
+    status: "success",
+    results: products.length,
+    totalPages, // Tổng số trang
+    currentPage, // Trang hiện tại
+    products,
+  });
 });
 
 export const getProductById = catchAsync(async (req, res, next) => {
