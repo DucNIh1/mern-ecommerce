@@ -213,7 +213,7 @@ const AddProductForm = () => {
                   {/* <span className="text-gray-500">Tải ảnh lên</span> */}
                   {image && (
                     <img
-                      src={`http://localhost:8080${image}`}
+                      src={`${import.meta.env.VITE_API_URL}${image}`}
                       alt=""
                       className="absolute inset-0"
                     />

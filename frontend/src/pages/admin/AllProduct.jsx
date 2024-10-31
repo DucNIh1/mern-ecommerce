@@ -226,7 +226,9 @@ const ProductList = () => {
                 <tr key={index} className="border-t">
                   <td className="py-2">
                     <img
-                      src={`http://localhost:8080${product.images[0]}`}
+                      src={`${import.meta.env.VITE_API_URL}${
+                        product.images[0]
+                      }`}
                       alt={product.name}
                       className="w-10 h-10 mr-4 rounded-lg"
                     />

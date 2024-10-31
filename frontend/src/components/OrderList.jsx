@@ -195,7 +195,9 @@ function OrderItem({ order, refetch, mainColor, isAdmin }) {
             >
               <div className="flex items-start lg:items-center">
                 <img
-                  src={`http://localhost:8080${item?.product?.images[0]}`}
+                  src={`${import.meta.env.VITE_API_URL}${
+                    item?.product?.images[0]
+                  }`}
                   className="object-cover w-20 h-20 mr-4"
                 />
                 <div className="flex flex-col flex-1 gap-2 md:gap-10 md:flex-row">
@@ -420,7 +422,7 @@ const ReviewProduct = ({
                         <img src={upload} alt="" className="w-full h-full" />
                         {image && (
                           <img
-                            src={`http://localhost:8080${image}`}
+                            src={`${import.meta.env.VITE_API_URL}${image}`}
                             alt=""
                             className="absolute inset-0"
                           />

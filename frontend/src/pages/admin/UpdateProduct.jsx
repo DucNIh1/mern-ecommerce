@@ -172,7 +172,7 @@ const UpdateProduct = () => {
           <div className="flex gap-4">
             {images?.map((image, index) => (
               <div key={index} className="flex flex-col items-center">
-                <label className="relative flex items-center justify-center  mx-auto overflow-hidden border-2 border-gray-300 cursor-pointer w-28 h-28 hover:bg-gray-100">
+                <label className="relative flex items-center justify-center mx-auto overflow-hidden border-2 border-gray-300 cursor-pointer w-28 h-28 hover:bg-gray-100">
                   <input
                     type="file"
                     accept="image/*"
@@ -183,7 +183,7 @@ const UpdateProduct = () => {
                   {/* <span className="text-gray-500">Tải ảnh lên</span> */}
                   {image && (
                     <img
-                      src={`http://localhost:8080${image}`}
+                      src={`${import.meta.env.VITE_API_URL}${image}`}
                       alt=""
                       className="absolute inset-0"
                     />
