@@ -76,12 +76,16 @@ const router = createBrowserRouter([
       },
       {
         path: "my-orders",
-        element: <MyOrders />,
+        element: (
+          <ProtectedRoute allowedRoles={["user", "admin"]}>
+            <MyOrders />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "Update-me",
         element: (
-          <ProtectedRoute allowedRoles={["user"]}>
+          <ProtectedRoute allowedRoles={["user", "admin"]}>
             <UpdateMe />
           </ProtectedRoute>
         ),

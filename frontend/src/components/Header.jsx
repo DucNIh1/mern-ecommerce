@@ -330,20 +330,25 @@ const Header = ({ wishListData = [], setOpenWishList }) => {
               </li>
             )}
 
-            <li>
-              <Link to="orders">Đơn hàng</Link>
-            </li>
             {!user && (
               <li>
                 <Link to={"login"}>Đăng nhập</Link>
               </li>
             )}
             {user && (
-              <li>
-                <Link to={"login"} onClick={handleLogout}>
-                  Đăng xuất
-                </Link>
-              </li>
+              <>
+                <li>
+                  <Link to="my-orders">Đơn hàng</Link>
+                </li>
+                <li>
+                  <Link to="Update-me">Thông tin cá nhân</Link>
+                </li>
+                <li>
+                  <Link to={"login"} onClick={handleLogout}>
+                    Đăng xuất
+                  </Link>
+                </li>
+              </>
             )}
           </ul>
 
