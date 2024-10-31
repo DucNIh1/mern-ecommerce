@@ -154,7 +154,7 @@ const ProductDetails = () => {
                   <button
                     disabled={s.quantity == 0}
                     className={`uppercase border-2 border-gray-200 px-4 py-2 min-w-[50px] min-h-[45px]  font-semibold disabled:cursor-not-allowed  ${
-                      proSize?.size == s.size ? "border-amber-900" : ""
+                      proSize?.size == s.size ? "border-red-900" : ""
                     }`}
                     onClick={() =>
                       setProSize({ size: s.size, quantity: s.quantity })

@@ -74,7 +74,7 @@ const ProductCard = ({ product }) => {
               <button
                 key={index}
                 className={` bg-black py-1 bg-opacity-80  min-w-10 uppercase ${
-                  cardSize == size.size ? "bg-amber-950" : ""
+                  cardSize == size.size ? "bg-red-900" : ""
                 } 
                 }`}
                 onClick={() => setCardSize(size.size)}
