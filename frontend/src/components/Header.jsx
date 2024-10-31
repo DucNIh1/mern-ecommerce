@@ -132,9 +132,9 @@ const Header = ({ wishListData = [], setOpenWishList }) => {
           to="top"
           smooth={true}
           duration={500}
-          className="fixed top-2/3 right-5"
+          className="fixed top-2/3 right-5 z-[999]"
         >
-          <IoMdArrowRoundUp className="cursor-pointer size-10 hover:opacity-85" />
+          <IoMdArrowRoundUp className="cursor-pointer size-10 hover:opacity-85 z-[999]" />
         </ScrollLink>
       )}
       <div
@@ -363,7 +363,9 @@ const Header = ({ wishListData = [], setOpenWishList }) => {
 
           <div className="flex items-center gap-2 p-5 md:hidden">
             <IoBagHandleOutline className="text-lg text-red-500 duration-150 ease-linear cursor-pointer hover:scale-125" />
-            <p className="text-red-300">Giỏ hàng</p>
+            <Link to="/cart" className="text-red-300">
+              Giỏ hàng
+            </Link>
 
             <span className="absolute bottom-[-5px] right-[-5px] w-4 h-4 text-[8px] rounded-full bg-black text-white text-center leading-4">
               5
