@@ -11,6 +11,7 @@ import {
 } from "../../redux/api/orderApiSlice";
 
 import { toast } from "react-toastify";
+import { useForm } from "react-hook-form";
 
 const Checkout = () => {
   const [provincesData, setProvincesData] = useState([]);
@@ -18,9 +19,6 @@ const Checkout = () => {
   const [wardsData, setWardsData] = useState([]);
 
   // Lấy value
-  const [username, setUsername] = useState("");
-  const [street, setStreet] = useState("");
-  const [phone, setPhone] = useState("");
   const [provine, setProvince] = useState("");
   const [district, setDistrict] = useState("");
   const [ward, setWard] = useState("");
@@ -40,7 +38,6 @@ const Checkout = () => {
         const response = await axios.get(
           `https://open.oapi.vn/location/provinces?size=63`
         );
-
         setProvincesData(response.data.data);
       } catch (error) {
         console.error(error);
@@ -64,7 +61,6 @@ const Checkout = () => {
 
   // Lấy danh sách phường/xã khi người dùng chọn quận/huyện
   const fetchWards = async (districtId) => {
-    console.log(districtId);
     try {
       const response = await axios.get(
         `https://open.oapi.vn/location/wards/${districtId}?size=50`
@@ -109,13 +105,32 @@ const Checkout = () => {
     setTotalPrice(cartData?.cart?.totalPrice);
   }, [cartData?.cart?.totalPrice, cartData?.cart?.items]);
 
-  const handleCreateOrder = async () => {
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm();
+
+  const handleCreateOrder = async (data) => {
+    if (!provine) {
+      toast.error("Vui lòng chọn Tỉnh/Thành phố");
+      return;
+    }
+    if (!district) {
+      toast.error("Vui lòng chọn Quận/Huyện");
+      return;
+    }
+    if (!ward) {
+      toast.error("Vui lòng chọn Phường/Xã");
+      return;
+    }
     try {
       if (paymentMethod === "Thanh toán tiền mặt") {
         await createOrderNormal({
-          username,
-          street,
-          phone,
+          username: data.username,
+          street: data.street,
+          phone: data.phone,
           city: provine,
           district,
           ward,
@@ -127,9 +142,9 @@ const Checkout = () => {
         toast.success("Mua hàng thành công!");
       } else if (paymentMethod === "ZaloPay") {
         const res = await createOrderWithZaloPay({
-          username,
-          street,
-          phone,
+          username: data.username,
+          street: data.street,
+          phone: data.phone,
           city: provine,
           district,
           ward,
@@ -138,6 +153,9 @@ const Checkout = () => {
           paymentMethod,
         }).unwrap();
         refetch();
+        setValue("username", "");
+        setValue("street", "");
+        setValue("phone", "");
 
         if (res.order_url) {
           window.location.href = res.order_url;
@@ -156,42 +174,80 @@ const Checkout = () => {
           <h2 className="mb-4 text-lg font-semibold">Thông tin nhận hàng</h2>
           <form className="flex flex-col gap-5">
             <div className="flex flex-col gap-5">
-              <div>
+              <div className="flex flex-col w-full gap-2">
                 <label className="block mb-1 text-sm font-medium text-gray-700">
-                  * Họ và tên
+                  * Tên người nhận
                 </label>
                 <input
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
                   type="text"
-                  placeholder="Họ và tên"
+                  placeholder="Nguyễn Văn A"
                   className="w-full p-2 border rounded outline-none focus:border-red-800"
+                  {...register("username", {
+                    required: "Vui lòng nhập tên người nhận",
+                    minLength: {
+                      value: 3,
+                      message: "Tên người nhận phải có tối thiểu 3 kí tự",
+                    },
+                  })}
                 />
+                {errors.username && (
+                  <p className="text-sm text-red-500">
+                    {errors.username.message}
+                  </p>
+                )}
               </div>
               <div className="flex gap-4">
-                <div className="w-full">
+                <div className="flex flex-col w-full gap-2">
                   <label className="block mb-1 text-sm font-medium text-gray-700">
-                    * Số nhà, tên đường
+                    * Địa chỉ
                   </label>
                   <input
-                    value={street}
-                    onChange={(e) => setStreet(e.target.value)}
                     type="text"
-                    placeholder="Số nhà, tên đường"
+                    placeholder="Số nhà, ngõ"
                     className="w-full p-2 border rounded outline-none focus:border-red-800"
+                    {...register("street", {
+                      required: "Vui lòng nhập địa chỉ nhận hàng",
+                      minLength: {
+                        value: 6,
+                        message: "Địa chỉ phải có tối thiểu 6 kí tự",
+                      },
+                    })}
                   />
+                  {errors.street && (
+                    <p className="text-sm text-red-500">
+                      {errors.street.message}
+                    </p>
+                  )}
                 </div>
-                <div className="w-full">
+                <div className="flex flex-col w-full gap-2">
                   <label className="block mb-1 text-sm font-medium text-gray-700">
                     * Số điện thoại
                   </label>
                   <input
                     type="text"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="Số điện thoại"
+                    placeholder="xxx-xxxx-xxx"
                     className="w-full p-2 border rounded outline-none focus:border-red-800"
+                    {...register("phone", {
+                      required: "Vui lòng nhập số điện thoại",
+                      minLength: {
+                        value: 10,
+                        message: "Số điện thoại phải có 10 chữ số",
+                      },
+                      maxLength: {
+                        value: 10,
+                        message: "Số điện thoại không được vượt quá 10 chữ số",
+                      },
+                      pattern: {
+                        value: /(03|05|07|08|09)\d{8}$/,
+                        message: "Số điện thoại không đúng định dạng",
+                      },
+                    })}
                   />
+                  {errors.phone && (
+                    <p className="text-sm text-red-500">
+                      {errors.phone.message}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -352,7 +408,7 @@ const Checkout = () => {
 
         <button
           className="w-full py-2 mt-5 mb-4 text-white bg-red-700 rounded hover:bg-red-900"
-          onClick={handleCreateOrder}
+          onClick={handleSubmit(handleCreateOrder)}
         >
           Tiến hành xác nhận
         </button>

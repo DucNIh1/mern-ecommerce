@@ -5,6 +5,8 @@ import moment from "moment";
 import qs from "qs";
 import Order from "../models/order.model.js";
 import Cart from "../models/cart.model.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 const config = {
   app_id: process.env.ZALO_APP_ID,
@@ -59,7 +61,7 @@ export const createOrder = catchAsync(async (req, res, next) => {
     //khi thanh toán xong, zalopay server sẽ POST đến url này để thông báo cho server của mình
     //Chú ý: cần dùng ngrok để public url thì Zalopay Server mới call đến được
     callback_url:
-      "https://4ab6-1-54-213-79.ngrok-free.app/api/payment/callback-order",
+      "https://eb59-1-54-213-79.ngrok-free.app/api/payment/callback-order",
     description: `Zalo - Payment for the order #${transID}`,
   };
 

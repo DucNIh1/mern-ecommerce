@@ -82,15 +82,15 @@ const Cart = () => {
                     <div className="flex gap-4 md:w-full " key={index}>
                       <img
                         src={`${import.meta.env.VITE_API_URL}${
-                          item?.product.images[0]
+                          item?.product?.images[0]
                         }`}
-                        alt={item?.product.name}
+                        alt={item?.product?.name}
                         className="object-cover w-24 mr-4 rounded-lg md:w-32 lg:w-36"
                       />
                       <div className="flex flex-col flex-1 gap-5 md:flex-row">
                         <div className="flex flex-col flex-1 gap-4 ">
                           <div className="font-medium">
-                            {item?.product.name}
+                            {item?.product?.name}
                           </div>
                           <div className="">
                             <span className="text-gray-500">Size: </span>

@@ -19,7 +19,7 @@ const ProductReviews = ({ product }) => {
     ) || [];
 
   return (
-    <section className="w-full p-10 border shadow-sm">
+    <section className="w-full p-10 mb-20 border shadow-sm">
       <h1 className="mb-10 text-2xl font-semibold text-center text-gray-800 md:text-start">
         ĐÁNH GIÁ SẢN PHẨM
       </h1>
@@ -59,11 +59,13 @@ const ProductReviews = ({ product }) => {
           </div>
         ))}
 
-        <Paganation
-          totalPages={totalPages}
-          page={currentPage}
-          setPage={setCurrentPage}
-        />
+        {currentReviews.length > 0 && (
+          <Paganation
+            totalPages={totalPages}
+            page={currentPage}
+            setPage={setCurrentPage}
+          />
+        )}
       </div>
     </section>
   );

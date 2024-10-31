@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useGetMyOrdersQuery } from "../../redux/api/orderApiSlice";
 import Paganation from "../../components/Paganation";
 import OrderList from "../../components/OrderList";
@@ -12,6 +12,9 @@ const MyOrders = () => {
     page,
   });
 
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
   const totalPages = data?.totalPages;
 
   return (

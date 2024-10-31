@@ -201,6 +201,7 @@ const ProductList = () => {
                 <option value={"Nam"}>Nam</option>
                 <option value={"Nữ"}>Nữ</option>
                 <option value={"Trẻ em"}>Trẻ em</option>
+                <option value={"Unisex"}>Unisex</option>
               </select>
             </td>
           </tr>
