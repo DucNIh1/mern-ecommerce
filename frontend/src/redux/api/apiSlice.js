@@ -2,7 +2,7 @@ import { fetchBaseQuery, createApi } from "@reduxjs/toolkit/query/react";
 import { logout, setCredentials } from "../features/authSlice";
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: "http://localhost:8080",
+  baseUrl: `${import.meta.env.VITE_API_URL}`,
   credentials: "include",
   prepareHeaders: (headers, { getState }) => {
     const token = getState().auth.token;
@@ -15,6 +15,7 @@ const baseQuery = fetchBaseQuery({
 
 const baseQueryWithReauth = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions);
+
   if (
     result.error &&
     (result.error.status === 401 || result.error.status === 403)
@@ -35,7 +36,6 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
           user: refreshResult.data.user || user,
         })
       );
-      // retry the original query with new access token
       result = await baseQuery(args, api, extraOptions);
     } else {
       api.dispatch(logout());
@@ -47,7 +47,7 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 
 export const apiSlice = createApi({
   baseQuery: baseQueryWithReauth, //baseQuery: Là hàm được sử dụng để thực hiện các yêu cầu HTTP.
-  tagTypes: ["Product", "Order", "User", "Category"],
+  tagTypes: ["Product", "Order", "User", "Category", "WishList", "Cart"],
   endpoints: () => ({}),
 });
 

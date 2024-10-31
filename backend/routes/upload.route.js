@@ -36,7 +36,7 @@ const fileFilter = (req, file, cb) => {
 
 // Khởi tao middleware
 const upload = multer({ storage, fileFilter });
-const uploadSingleImage = upload.single("image");
+const uploadMultipleImages = upload.array("images", 5);
 
 // router.post(
 //   "/",
@@ -51,14 +51,16 @@ const uploadSingleImage = upload.single("image");
 // );
 
 router.post("/", (req, res) => {
-  uploadSingleImage(req, res, (err) => {
-    console.log(req.file);
+  uploadMultipleImages(req, res, (err) => {
     if (err) {
-      res.status(400).send({ message: err.message });
-    } else if (req.file) {
+      return res.status(400).send({ message: err.message });
+    }
+
+    if (req.files && req.files.length > 0) {
+      const imagePaths = req.files.map((file) => `/${file.path}`);
       res.status(200).send({
         message: "Tải ảnh lên thành công",
-        image: `/${req.file.path}`,
+        images: imagePaths, // Trả về danh sách đường dẫn ảnh đã upload
       });
     } else {
       res.status(400).send({ message: "Bạn chưa cung cấp hình ảnh" });

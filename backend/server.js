@@ -7,6 +7,7 @@ import mainRouter from "./routes/index.js";
 import AppError from "./utils/AppError.js";
 import path from "path";
 import cors from "cors";
+import bodyParser from "body-parser";
 
 dotenv.config();
 const app = express();
@@ -16,7 +17,8 @@ const PORT = process.env.PORT || 5000;
 //Connect to DB
 conn();
 
-app.use(cors({ origin: "http://localhost:5174", credentials: true }));
+app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+app.use(bodyParser.json());
 app.use(express.json());
 app.use(cookieParser());
 

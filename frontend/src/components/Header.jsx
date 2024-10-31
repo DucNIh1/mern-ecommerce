@@ -1,17 +1,80 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import logo from "../../../assets/frontend_assets/logo.png";
+import logo from "../assets/logo.png";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "react-toastify";
+import { Link as ScrollLink } from "react-scroll";
+
+//icons
 import { CiSearch } from "react-icons/ci";
-import { IoPersonOutline } from "react-icons/io5";
-import { IoBagHandleOutline } from "react-icons/io5";
+import {
+  IoCloseSharp,
+  IoPersonOutline,
+  IoBagHandleOutline,
+} from "react-icons/io5";
 import { BiMenuAltRight } from "react-icons/bi";
+import { HiOutlineHeart } from "react-icons/hi2";
+import { IoMdArrowRoundUp } from "react-icons/io";
+
 import { useDispatch, useSelector } from "react-redux";
 import { useLogoutMutation } from "../redux/api/authApiSlice.js";
-import { toast } from "react-toastify";
+import { useGetProductsQuery } from "../redux/api/productApiSlice.js";
+import { useGetCartQuery } from "../redux/api/cartApiSlice.js";
 import { logout } from "../redux/features/authSlice.js";
-const Header = () => {
-  const [logoutMutation] = useLogoutMutation();
+import { skipToken } from "@reduxjs/toolkit/query/react";
+
+// eslint-disable-next-line react/prop-types
+const SearchProduct = ({ products = [] }) => {
+  return (
+    <div
+      className=" absolute top-full  translate-y-[5px]  w-full max-h-[300px] h-auto z-50 bg-white rounded-sm shadow-md flex flex-col  gap-2 overflow-y-scroll"
+      style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+    >
+      {products &&
+        products.length > 0 &&
+        products.map((product) => (
+          <Link
+            to={`/product/${product._id}`}
+            className="flex gap-2 p-4 cursor-pointer"
+            key={product._id}
+          >
+            <img
+              src={`http://localhost:8080${product.images[0]}`}
+              alt=""
+              className="w-12 h-12"
+            />
+            <p className="text-sm font-normal text-gray-600 max-w-[150px] hover:text-amber-950">
+              {product.name}
+            </p>
+            <p className="flex-1 text-sm text-amber-600">
+              {" "}
+              {new Intl.NumberFormat("vi-VN").format(product.price)} VND
+            </p>
+          </Link>
+        ))}
+    </div>
+  );
+};
+
+// eslint-disable-next-line react/prop-types
+const Header = ({ wishListData = [], setOpenWishList }) => {
+  const [isVisible, setIsVisible] = useState(false); // scroll
+  const [openMenu, setOpenMenu] = useState(false);
+
+  // State để lưu các sản phẩm được chọn
+  const [name, setName] = useState(""); // for searching
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const searchRef = useRef(null);
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  const { user } = useSelector((state) => state.auth);
+
+  const { data: cartData } = useGetCartQuery(user ?? skipToken);
+  const [logoutMutation] = useLogoutMutation();
+  const { data: productData } = useGetProductsQuery({
+    name: name,
+  });
 
   const handleLogout = async (e) => {
     try {
@@ -28,98 +91,282 @@ const Header = () => {
     }
     e.preventDefault();
   };
-  const { user } = useSelector((state) => state.auth);
+
+  // Hàm xử lý nhấp chuột ra ngoài input search
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setName("");
+        setIsSearchVisible(false); // Ẩn tìm kiếm nếu nhấp ra ngoài
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [searchRef]);
+
+  // xu li scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 300) {
+        setIsVisible(true);
+      } else {
+        setIsVisible(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   return (
-    <div className=" flex items-center font-medium py-5 justify-between mx-auto ">
-      <img src={logo} alt="" className="leading-6 w-36" />
-      <ul className="hidden lg:flex text-sm gap-5 leading-5 text-[#374151] uppercase items-center">
-        <li>
-          <NavLink
-            to="/"
-            className={({ isActive }) => (isActive ? "text-pink-500" : "")}
-          >
-            Trang chủ
-          </NavLink>
-        </li>
-        <li>
-          <NavLink
-            to="/collections"
-            className={({ isActive }) => (isActive ? "text-pink-500" : "")}
-          >
-            Bộ sưu tập
-          </NavLink>
-        </li>
+    <>
+      {isVisible && (
+        <ScrollLink
+          to="top"
+          smooth={true}
+          duration={500}
+          className="fixed top-2/3 right-5"
+        >
+          <IoMdArrowRoundUp className="cursor-pointer size-10 hover:opacity-85" />
+        </ScrollLink>
+      )}
+      <div
+        className="flex items-center justify-between py-5 mx-auto font-medium "
+        id="top"
+      >
+        <img src={logo} alt="" className="leading-6 w-36" />
 
-        <li>
-          <NavLink
-            to="about"
-            className={({ isActive }) => (isActive ? "text-pink-500" : "")}
-          >
-            Thông tin
-          </NavLink>
-        </li>
-        <li>
-          <NavLink
-            to="/admin/list-products"
-            className={({ isActive }) => (isActive ? "text-pink-500" : "")}
-          >
-            Liên hệ
-          </NavLink>
-        </li>
-        {user && user?.role === "admin" && (
-          <li className="border rounded-xl px-5 py-1">
+        {/* Navigation */}
+        <ul className="hidden xl:flex text-sm gap-5 leading-5 text-[#374151] uppercase items-center">
+          <li>
             <NavLink
-              to={"/admin"}
-              className={({ isActive }) => (isActive ? "text-pink-500" : "")}
+              to="/"
+              className={({ isActive }) => (isActive ? "text-red-700 " : "")}
             >
-              Admin Panel
+              Trang chủ
             </NavLink>
           </li>
-        )}
-      </ul>
-      <div className="flex items-center gap-6 leading-6 ">
-        <CiSearch className="text-2xl cursor-pointer hover:scale-125 duration-150 ease-linear" />
-        <div className="relative  group">
-          <IoPersonOutline className="text-2xl cursor-pointer hover:scale-125 duration-150 ease-linear" />
-          <div className="group-hover:block hidden absolute dropdown-menu right-0 pt-4">
-            <div className="flex flex-col gap-2 w-36 py-3 px-5  bg-slate-100 text-gray-500 rounded">
-              {user ? (
-                <>
+          <li>
+            <NavLink
+              to="/collections"
+              className={({ isActive }) => (isActive ? "text-red-700 " : "")}
+            >
+              Bộ sưu tập
+            </NavLink>
+          </li>
+
+          <li>
+            <NavLink
+              to="about"
+              className={({ isActive }) => (isActive ? "text-red-700 " : "")}
+            >
+              Thông tin
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="contact"
+              className={({ isActive }) => (isActive ? "text-red-700 " : "")}
+            >
+              Liên hệ
+            </NavLink>
+          </li>
+          {user && user?.role === "admin" && (
+            <li className="px-5 py-1 border rounded-xl">
+              <NavLink
+                to={"/admin"}
+                className={({ isActive }) => (isActive ? "text-red-700 " : "")}
+              >
+                Admin Panel
+              </NavLink>
+            </li>
+          )}
+        </ul>
+
+        {/* Search */}
+        <div className="relative hidden lg:block" ref={searchRef}>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              setIsSearchVisible(true);
+            }}
+            className=" w-[300px] py-3 px-2 outline-none bg-gray-100 rounded-3xl text-sm text-gray-800 pl-12 pr-5  focus:ring-2 focus:ring-red-300 focus:bg-white  "
+          />
+          {isSearchVisible && productData?.products.length > 0 && (
+            <SearchProduct products={productData?.products} />
+          )}
+          <CiSearch className="absolute z-10 text-2xl text-gray-400 duration-150 ease-linear -translate-y-1/2 cursor-pointer hover:scale-125 top-1/2 left-2" />
+        </div>
+
+        {/* Group menu */}
+        <div className="items-center gap-6 leading-6 md:flex">
+          {/* menu person */}
+          <div className="relative hidden group md:block">
+            <IoPersonOutline className="text-2xl duration-150 ease-linear cursor-pointer hover:scale-125" />
+            <div className="absolute right-0 z-50 hidden pt-4 group-hover:block dropdown-menu">
+              <div className="flex flex-col gap-2 py-2 font-normal text-gray-800 bg-white rounded-md shadow-md w-52">
+                {user ? (
+                  <>
+                    <Link
+                      className="block px-4 py-2 rounded-lg hover:bg-gray-100 "
+                      to={"login"}
+                      onClick={handleLogout}
+                    >
+                      Đăng xuất
+                    </Link>
+                    <Link
+                      className="block px-4 py-2 rounded-lg hover:bg-gray-100 "
+                      to="my-orders"
+                    >
+                      Đơn hàng
+                    </Link>
+                    <Link
+                      className="block px-4 py-2 rounded-lg hover:bg-gray-100 "
+                      to="update-me"
+                    >
+                      Thông tin cá nhân
+                    </Link>
+                  </>
+                ) : (
                   <Link
-                    className="block hover:bg-slate-200  rounded-lg p-2"
+                    className="block px-4 py-2 rounded-lg hover:bg-gray-100 "
                     to={"login"}
-                    onClick={handleLogout}
                   >
-                    Đăng xuất
+                    Đăng nhập
                   </Link>
-                  <Link
-                    className="block hover:bg-slate-200  rounded-lg p-2"
-                    to="orders"
-                  >
-                    Đơn hàng
-                  </Link>
-                </>
-              ) : (
-                <Link
-                  className="block hover:bg-slate-200  rounded-lg p-2"
-                  to={"login"}
-                >
-                  Đăng nhập
-                </Link>
-              )}
+                )}
+              </div>
             </div>
           </div>
+          {/* wish icon */}
+          <div
+            className="relative hidden md:block"
+            onClick={() => setOpenWishList(true)}
+          >
+            <HiOutlineHeart className="text-2xl text-red-500 duration-150 ease-linear cursor-pointer hover:scale-125" />
+            <span className="absolute bottom-[-5px] right-[-5px] w-4 h-4 text-[8px] rounded-full bg-black text-white text-center leading-4">
+              {wishListData?.wishlist?.length || 0}
+            </span>
+          </div>
+          {/* cart icon */}
+          <div className="relative hidden md:block">
+            <Link to={"/cart"}>
+              <IoBagHandleOutline className="text-2xl duration-150 ease-linear cursor-pointer hover:scale-125" />
+              <span className="absolute bottom-[-5px] right-[-5px] w-4 h-4 text-[8px] rounded-full bg-black text-white text-center leading-4">
+                {cartData?.cart?.items?.length > 0
+                  ? cartData?.cart?.items?.length
+                  : 0}
+              </span>
+            </Link>
+          </div>
+
+          {/* menu  icon*/}
+          <BiMenuAltRight
+            onClick={() => setOpenMenu(true)}
+            className="text-2xl duration-150 ease-linear cursor-pointer hover:scale-125 xl:hidden"
+          />
         </div>
-        <div className="relative">
-          <IoBagHandleOutline className="text-2xl cursor-pointer hover:scale-125 duration-150 ease-linear" />
-          <span className="absolute bottom-[-5px] right-[-5px] w-4 h-4 text-[8px] rounded-full bg-black text-white text-center leading-4">
-            5
-          </span>
-        </div>
-        <BiMenuAltRight className="text-2xl cursor-pointer hover:scale-125 duration-150 ease-linear lg:hidden" />
       </div>
-    </div>
+
+      {/* Reponsive menu */}
+      {openMenu && (
+        <div className="fixed bg-black top-0 bottom-0 right-0 md:w-[50%] w-[80%] bg-opacity-80 z-50">
+          <IoCloseSharp
+            className="absolute p-2 text-white rounded-full cursor-pointer top-2 right-4 size-10 hover:bg-red-300 hover:text-white"
+            onClick={() => setOpenMenu(false)}
+          />
+
+          <ul className="flex flex-col gap-3 p-5 mt-20 text-white md:text-center md:gap-5 ">
+            <li>
+              <NavLink
+                to="/"
+                className={({ isActive }) => (isActive ? "text-red-700 " : "")}
+              >
+                Trang chủ
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="/collections"
+                className={({ isActive }) => (isActive ? "text-red-700" : "")}
+              >
+                Bộ sưu tập
+              </NavLink>
+            </li>
+
+            <li>
+              <NavLink
+                to="about"
+                className={({ isActive }) => (isActive ? "text-red-700" : "")}
+              >
+                Thông tin
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="contact"
+                className={({ isActive }) => (isActive ? "text-red-700" : "")}
+              >
+                Liên hệ
+              </NavLink>
+            </li>
+            {user && user?.role === "admin" && (
+              <li className="">
+                <NavLink
+                  to={"/admin"}
+                  className={({ isActive }) => (isActive ? "text-red-700" : "")}
+                >
+                  Admin Panel
+                </NavLink>
+              </li>
+            )}
+
+            <li>
+              <Link to="orders">Đơn hàng</Link>
+            </li>
+            {!user && (
+              <li>
+                <Link to={"login"}>Đăng nhập</Link>
+              </li>
+            )}
+            {user && (
+              <li>
+                <Link to={"login"} onClick={handleLogout}>
+                  Đăng xuất
+                </Link>
+              </li>
+            )}
+          </ul>
+
+          {/* wish icon */}
+          <div
+            className="flex items-center gap-2 p-5 md:hidden"
+            onClick={() => setOpenWishList(true)}
+          >
+            <HiOutlineHeart className="text-lg text-red-500 duration-150 ease-linear cursor-pointer hover:scale-125" />
+            <p className="text-red-300">Danh sách sản phẩm yêu thích</p>
+          </div>
+
+          <div className="flex items-center gap-2 p-5 md:hidden">
+            <IoBagHandleOutline className="text-lg text-red-500 duration-150 ease-linear cursor-pointer hover:scale-125" />
+            <p className="text-red-300">Giỏ hàng</p>
+
+            <span className="absolute bottom-[-5px] right-[-5px] w-4 h-4 text-[8px] rounded-full bg-black text-white text-center leading-4">
+              5
+            </span>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

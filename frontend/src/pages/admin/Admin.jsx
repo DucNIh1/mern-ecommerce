@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 import { Outlet } from "react-router-dom";
 import AdminLayout from "../../layout/AdminLayout";
 

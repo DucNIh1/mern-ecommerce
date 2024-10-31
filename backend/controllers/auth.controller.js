@@ -4,6 +4,12 @@ import AppError from "../utils/AppError.js";
 import catchAsync from "../utils/catchAsync.js";
 import validator from "validator";
 import bcrypt from "bcryptjs";
+import {
+  sendPasswordResetEmail,
+  sendResetSuccessEmail,
+  sendVerificationEmail,
+} from "../nodemail/mail.js";
+import crypto from "crypto";
 
 const generateToken = (res, user) => {
   const accessToken = jwt.sign({ user: user }, process.env.JWT_KEY, {
@@ -48,12 +54,54 @@ export const signup = catchAsync(async (req, res, next) => {
       new AppError("Email này đã được sử dụng, vui lòng dùng email khác", 400)
     );
 
-  const user = await User.create({ email, password, username });
-  user.password = undefined;
+  // Tạo ra mã gồm 6 số để xác minh email
+  const verificationToken = Math.floor(
+    100000 + Math.random() * 900000
+  ).toString();
+
+  // tạo mới user
+  const user = await User.create({
+    email,
+    password,
+    username,
+    verificationToken: verificationToken,
+    verificationTokenExpiresAt: Date.now() + 3600 * 24, // 24h
+  });
+
+  // Gửi token qua mail để xác minh tài khoản
+  await sendVerificationEmail(email, verificationToken);
+  // user.password = undefined;
+  // const accessToken = generateToken(res, user);
+  res.status(200).json({ message: "Vui lòng xác minh email" });
+});
+
+export const verificationEmail = catchAsync(async (req, res, next) => {
+  const { code } = req.body;
+
+  const user = await User.findOne({
+    verificationToken: code,
+    verificationTokenExpiresAt: {
+      $gt: Date.now(),
+    },
+  }).select("-password");
+
+  if (!user)
+    return next(new AppError("Mã xác minh không hợp lệ hoặc đã hết hạn", 400));
+
+  user.isVerified = true;
+  user.verificationToken = undefined;
+  user.verificationTokenExpiresAt = undefined;
+
+  // Lưu thay đổi vào cơ sở dữ liệu
+  await user.save();
+
   const accessToken = generateToken(res, user);
-  res
-    .status(200)
-    .json({ message: "Đăng kí tài khoản thành công", accessToken, user });
+
+  res.status(200).json({
+    message: "Xác minh tài khoản thành công",
+    accessToken,
+    user,
+  });
 });
 
 export const login = catchAsync(async (req, res, next) => {
@@ -78,6 +126,21 @@ export const login = catchAsync(async (req, res, next) => {
     );
   }
 
+  if (!user.isVerified) {
+    // Nếu signup rồi nhưng chưa xác minh thì khi đăng nhập gửi 1 mã xác minh mới
+    const verificationToken = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
+    user.verificationToken = verificationToken;
+    user.verificationTokenExpiresAt = Date.now() + 3600 * 24;
+
+    await user.save();
+    await sendVerificationEmail(email, verificationToken);
+    return res
+      .status(200)
+      .json({ message: "Mã xác minh đã được gửi qua email!" });
+  }
+
   const accessToken = generateToken(res, user);
   user.password = undefined;
 
@@ -86,7 +149,7 @@ export const login = catchAsync(async (req, res, next) => {
 
 export const updateMe = catchAsync(async (req, res, next) => {
   const id = req.user._id;
-  const { username, email, password, confirmPassword } = req.body;
+  const { username, email, password } = req.body;
 
   if (username && username.length < 3) {
     return next(new AppError("Username phải có ít nhất 3 kí tự", 400));
@@ -103,15 +166,7 @@ export const updateMe = catchAsync(async (req, res, next) => {
   user.username = username || user.username;
   user.email = email || user.email;
 
-  if (password) {
-    if (confirmPassword === password) {
-      user.password = password || user.password;
-    } else {
-      return next(
-        new AppError("Mật khẩu xác thực không chính xác, vui lòng thử lại", 400)
-      );
-    }
-  }
+  user.password = password || user.password;
 
   await user.save();
 
@@ -184,3 +239,65 @@ export const refresh = (req, res) => {
     }
   );
 };
+
+export const forgotPassword = catchAsync(async (req, res, next) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email, isActive: true });
+
+  if (!user)
+    return next(new AppError("Email không tồn tại hoặc đã bị khóa!", 400));
+
+  // Tao reset token
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  const resetTokenExpiresAt = Date.now() + 60 * 60 * 1000;
+
+  user.resetPasswordExpiresAt = resetTokenExpiresAt;
+  user.resetPasswordToken = resetToken;
+  await user.save();
+
+  await sendPasswordResetEmail(
+    email,
+    `http://localhost:5173/reset-password/${resetToken}`
+  );
+  res.status(200).json({ message: "Kiểm tra email của bạn" });
+});
+
+export const resetPassword = catchAsync(async (req, res, next) => {
+  const { password } = req.body;
+  const token = req.params.token;
+
+  console.log(password, token);
+  const user = await User.findOne({
+    resetPasswordToken: token,
+    resetPasswordExpiresAt: {
+      $gt: Date.now(),
+    },
+  });
+
+  if (!user)
+    return next(
+      new AppError("Token không hợp lệ hoặc không tồn tại tài khoản này", 401)
+    );
+
+  user.password = password;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpiresAt = undefined;
+  await user.save();
+
+  await sendResetSuccessEmail(user.email);
+  res.status(200).json({ message: "Khôi phục mật khẩu thành công" });
+});
+
+export const checkAuth = catchAsync(async (req, res, next) => {
+  const user = await User.findById(req.userId).select("-password");
+
+  if (!user) return next(new AppError("User not found", 404));
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      user,
+    },
+  });
+});

@@ -1,31 +1,25 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable react/prop-types */
-import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
-import logo from "../../../assets/frontend_assets/logo.png";
-import { AiOutlineProduct } from "react-icons/ai";
-import { IoBagHandleOutline } from "react-icons/io5";
-import { CiCirclePlus } from "react-icons/ci";
-import { CiViewList } from "react-icons/ci";
-import {
-  FaCheckSquare,
-  FaRegSquare,
-  FaChevronDown,
-  FaChevronUp,
-} from "react-icons/fa";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+
+import { IoHomeOutline } from "react-icons/io5";
+import { MdOutlineSupervisorAccount } from "react-icons/md";
+import { BsBoxSeam } from "react-icons/bs";
+import { BiCategoryAlt } from "react-icons/bi";
+import { IoCartOutline } from "react-icons/io5";
+import { IoReturnDownBackSharp } from "react-icons/io5";
+
 import { useLogoutMutation } from "../redux/api/authApiSlice";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../redux/features/authSlice";
 import { toast, ToastContainer } from "react-toastify";
 
-const AdminLayout = ({ children }) => {
-  const [openSubmenu, setOpenSubmenu] = useState(null);
+const AdminLayout = () => {
   const [logoutMutation] = useLogoutMutation();
-  const toggleSubmenu = (index) => {
-    setOpenSubmenu(openSubmenu === index ? null : index);
-  };
+
+  const { user } = useSelector((state) => state.auth);
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
   const handleLogout = async (e) => {
     e.preventDefault();
 
@@ -47,132 +41,106 @@ const AdminLayout = ({ children }) => {
     <>
       <ToastContainer />
 
-      <div>
-        <div className="w-full px-[4%] flex items-center justify-between leading-6 py-4 border-b border-gray-200">
-          <img src={logo} alt="" className="leading-6 w-36" />
-
-          <button
-            onClick={handleLogout}
-            className="px-6 py-2 font-medium text-white transition duration-300 ease-in-out bg-gray-800 rounded-lg hover:bg-gray-700"
-          >
-            Đăng xuất
-          </button>
+      {/* Header  */}
+      <header className="flex items-center justify-between p-4 px-10">
+        <div className="flex items-center ">
+          <p>
+            Xin chào{" "}
+            <span className="text-lg font-semibold text-purple-500">
+              {user.username}
+            </span>
+          </p>
         </div>
-        <div className="flex leading-6">
-          {/* Menu */}
-          <div className="w-[20%] min-h-screen border-r-2 border-gray-300 bg-gray-100 pl-10 pt-5">
-            <ul className="p-4 space-y-3">
-              {/* Danh mục Add Items */}
-              <li>
-                <button
-                  onClick={() => toggleSubmenu(1)}
-                  className="flex items-center justify-start w-full p-3 text-left transition duration-300 ease-in-out border border-gray-300 rounded-lg"
-                >
-                  <AiOutlineProduct className="mr-2 " />
-                  <span className="text-lg">Quản lí sản phẩm</span>
-                  {openSubmenu === 1 ? (
-                    <FaChevronUp className="ml-auto text-gray-500" />
-                  ) : (
-                    <FaChevronDown className="ml-auto text-gray-500" />
-                  )}
-                </button>
-                {openSubmenu === 1 && (
-                  <ul className="pl-6 space-y-2">
-                    <li>
-                      <NavLink
-                        to="add-product"
-                        className={({ isActive }) =>
-                          `flex items-center p-2 hover:bg-gray-200 ${
-                            isActive ? "bg-blue-100 text-blue-600" : ""
-                          }`
-                        }
-                      >
-                        <CiCirclePlus className="mr-2 text-gray-500" />
-                        <span>Thêm sản phẩm</span>
-                      </NavLink>
-                    </li>
-                    <li>
-                      <NavLink
-                        to="list-products"
-                        className={({ isActive }) =>
-                          `flex items-center p-2 hover:bg-gray-200 ${
-                            isActive ? "bg-blue-100 text-blue-600" : ""
-                          }`
-                        }
-                      >
-                        <CiViewList className="mr-2 text-gray-500" />
-                        <span>Danh sách sản phẩm</span>
-                      </NavLink>
-                    </li>
-                  </ul>
-                )}
-              </li>
+        <button className="absolute hidden px-4 py-1 text-white bg-purple-500 rounded-lg top-full group-hover:block">
+          Logout
+        </button>
+        <button
+          className="text-white bg-purple-500 gap-2 hover:bg-purple-800 focus:ring-4 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center"
+          onClick={handleLogout}
+        >
+          Logout
+        </button>
+      </header>
+      {/* Content */}
+      <div className="flex flex-col lg:flex-row">
+        {/* Navigation */}
+        <aside className="p-4 bg-white lg:w-64 lg:h-screen">
+          <nav>
+            <ul className="flex flex-row flex-wrap w-full gap-5 lg:flex-col lg:gap-0">
+              <NavLink
+                to={"/admin/dashboard"}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 mb-4 ${
+                    isActive ? "text-purple-800 bg-purple-100" : "text-gray-800"
+                  }  pl-4  py-2 rounded-lg font-semibold hover:bg-purple-50 hover:text-purple-800 transition-all duration-100 ease-in-out`
+                }
+              >
+                <IoHomeOutline className="font-semibold size-5" />
+                <span>Home</span>
+              </NavLink>
+              <NavLink
+                to={"/admin/list-products"}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 mb-4 ${
+                    isActive ? "text-purple-800 bg-purple-100" : "text-gray-800"
+                  }  pl-4  py-2 rounded-lg font-semibold hover:bg-purple-50 hover:text-purple-800 transition-all duration-100 ease-in-out`
+                }
+              >
+                <BsBoxSeam className="font-semibold size-5" />
+                <span>Sản phẩm</span>
+              </NavLink>
+              <NavLink
+                to={"/admin/list-accounts"}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 mb-4 ${
+                    isActive ? "text-purple-800 bg-purple-100" : "text-gray-800"
+                  }  pl-4  py-2 rounded-lg font-semibold hover:bg-purple-50 hover:text-purple-800 transition-all duration-100 ease-in-out`
+                }
+              >
+                <MdOutlineSupervisorAccount className="font-semibold size-5" />
+                <span>Tài khoản</span>
+              </NavLink>
+              <NavLink
+                to={"/admin/list-categories"}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 mb-4 ${
+                    isActive ? "text-purple-800 bg-purple-100" : "text-gray-800"
+                  }  pl-4  py-2 rounded-lg font-semibold hover:bg-purple-50 hover:text-purple-800 transition-all duration-100 ease-in-out`
+                }
+              >
+                <BiCategoryAlt className="font-semibold size-5" />
+                <span>Danh mục </span>
+              </NavLink>
+              <NavLink
+                to={"/admin/list-orders"}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 mb-4 ${
+                    isActive ? "text-purple-800 bg-purple-100" : "text-gray-800"
+                  }  pl-4  py-2 rounded-lg font-semibold hover:bg-purple-50 hover:text-purple-800 transition-all duration-100 ease-in-out`
+                }
+              >
+                <IoCartOutline className="font-semibold size-5" />
+                <span>Đơn hàng</span>
+              </NavLink>
 
-              {/* Danh mục List Items (có submenu) */}
-              <li>
-                <button
-                  onClick={() => toggleSubmenu(2)}
-                  className="flex items-center justify-start w-full p-3 text-left transition duration-300 ease-in-out border border-gray-300 rounded-lg"
-                >
-                  <IoBagHandleOutline className="mr-2 " />
-                  <span className="text-lg">Quản lí đơn hàng</span>
-                  {openSubmenu === 2 ? (
-                    <FaChevronUp className="ml-auto text-gray-500" />
-                  ) : (
-                    <FaChevronDown className="ml-auto text-gray-500" />
-                  )}
-                </button>
-                {openSubmenu === 2 && (
-                  <ul className="pl-6 space-y-2">
-                    <li>
-                      <NavLink
-                        to="/submenu1"
-                        className={({ isActive }) =>
-                          `flex items-center p-2 hover:bg-gray-200 ${
-                            isActive ? "bg-blue-100 text-blue-600" : ""
-                          }`
-                        }
-                      >
-                        <FaRegSquare className="mr-2 text-gray-500" />
-                        <span>Submenu 1</span>
-                      </NavLink>
-                    </li>
-                    <li>
-                      <NavLink
-                        to="/submenu2"
-                        className={({ isActive }) =>
-                          `flex items-center p-2 hover:bg-gray-200 ${
-                            isActive ? "bg-blue-100 text-blue-600" : ""
-                          }`
-                        }
-                      >
-                        <FaRegSquare className="mr-2 text-gray-500" />
-                        <span>Submenu 2</span>
-                      </NavLink>
-                    </li>
-                  </ul>
-                )}
-              </li>
-
-              {/* Orders (có checkbox) */}
-              <li>
-                <NavLink
-                  to="/orders"
-                  className={({ isActive }) =>
-                    `flex items-center p-2 hover:bg-gray-200 ${
-                      isActive ? "bg-blue-100 text-blue-600" : ""
-                    }`
-                  }
-                >
-                  <FaCheckSquare className="mr-2 text-gray-500" />
-                  <span className="text-lg">Quản lí người dùng</span>
-                </NavLink>
-              </li>
+              <NavLink
+                to={"/"}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 mb-4 ${
+                    isActive ? "text-purple-800 bg-purple-100" : "text-gray-800"
+                  }  pl-4  py-2 rounded-lg font-semibold hover:bg-purple-50 hover:text-purple-800 transition-all duration-100 ease-in-out`
+                }
+              >
+                <IoReturnDownBackSharp className="font-semibold size-5" />
+                <span>Trang bán hàng</span>
+              </NavLink>
             </ul>
-          </div>
-          {/* Content */}
-          <div className="w-[70%] mx-auto p-5">{children}</div>
-        </div>
+          </nav>
+        </aside>
+        {/* Main content */}
+        <main className="flex-1 p-6 bg-[#f5f6fa]">
+          <Outlet />
+        </main>
       </div>
     </>
   );

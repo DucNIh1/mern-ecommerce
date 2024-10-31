@@ -32,13 +32,31 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    resetPasswordToken: String,
+    resetPasswordExpiresAt: Date,
+    verificationToken: String, // mã để xác minh email
+    verificationTokenExpiresAt: Date,
+    wishlist: [
+      {
+        product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+        size: {
+          type: String,
+          enum: ["s", "m", "l", "xl"],
+          default: "s",
+          required: true,
+        },
+      },
+    ],
   },
   {
     timestamps: true,
   }
 );
 
-// Hash the password before saving the user
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
@@ -46,6 +64,13 @@ userSchema.pre("save", async function (next) {
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
+
+userSchema.methods.comparePasswords = async function (
+  candidatePassword,
+  userPassword
+) {
+  return await bcrypt.compare(candidatePassword, userPassword);
+};
 
 const User = mongoose.model("User", userSchema);
 

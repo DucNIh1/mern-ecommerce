@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
-import logo from "../../../assets/frontend_assets/logo.png";
+import logo from "../assets/logo.png";
 
 const Footer = () => {
   return (
     <>
-      <div className="lg:grid lg:grid-cols-4 flex flex-col items-start gap-5 mx-auto">
+      <div className="flex flex-col items-start gap-5 mx-auto lg:grid lg:grid-cols-4 md:grid md:grid-cols-2">
         <div className="col-span-2">
-          <img src={logo} alt="" className="leading-6 w-36 mb-5" />
+          <img src={logo} alt="" className="mb-5 leading-6 w-36" />
           <p className="text-[#4b5563] text-sm leading-5 max-w-[450px]">
             Lorem ipsum dolor, sit amet consectetur adipisicing elit. Nisi
             quaerat quasi, incidunt nihil placeat minima iure unde facilis

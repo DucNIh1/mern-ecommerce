@@ -4,7 +4,7 @@ class AppError extends Error {
     this.statusCode = statusCode;
     this.status =
       this.statusCode >= 400 && this.statusCode < 500 ? "fail" : "error";
-    this.isOprational = true; // Chỉ sử dụng err này cho client err
+    this.isOprational = true;
     Error.captureStackTrace(this, this.constructor);
   }
 }

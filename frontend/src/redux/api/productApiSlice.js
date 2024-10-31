@@ -1,10 +1,11 @@
 import { apiSlice } from "./apiSlice";
+import { PRODUCT_URL, UPLOAD_URL } from "./contans";
 
 export const productApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     createProduct: builder.mutation({
       query: (data) => ({
-        url: `/api/products`,
+        url: `${PRODUCT_URL}`,
         method: "POST",
         body: data,
       }),
@@ -12,21 +13,21 @@ export const productApiSlice = apiSlice.injectEndpoints({
     }),
     getProducts: builder.query({
       query: (query) => ({
-        url: `/api/products`,
+        url: `${PRODUCT_URL}`,
         params: query,
       }),
       providesTags: ["Product"],
     }),
     getProductById: builder.query({
       query: (id) => ({
-        url: `/api/products/${id}`,
+        url: `${PRODUCT_URL}/${id}`,
       }),
       providesTags: ["Product"],
     }),
 
     updateProduct: builder.mutation({
       query: ({ id, data }) => ({
-        url: `/api/products/${id}`,
+        url: `${PRODUCT_URL}/${id}`,
         method: "PUT",
         body: data,
       }),
@@ -34,25 +35,40 @@ export const productApiSlice = apiSlice.injectEndpoints({
     }),
     uploadProductImage: builder.mutation({
       query: (data) => ({
-        url: `/api/uploads`,
+        url: `${UPLOAD_URL}`,
         method: "POST",
         body: data,
       }),
     }),
     deleteProduct: builder.mutation({
       query: (productId) => ({
-        url: `/api/products/${productId}`,
+        url: `${PRODUCT_URL}/${productId}`,
         method: "DELETE",
       }),
-      providesTags: ["Product"],
+      invalidatesTags: ["Product"],
     }),
 
     createReview: builder.mutation({
-      query: (data) => ({
-        url: `/api/products/${data.id}/reviews`,
+      query: ({ productId, ...rest }) => ({
+        url: `${PRODUCT_URL}/${productId}/reviews`,
         method: "POST",
-        body: data,
+        body: rest,
       }),
+      invalidatesTags: ["Product"],
+    }),
+    getRelatedProducts: builder.query({
+      query: (query) => ({
+        url: `${PRODUCT_URL}/related-products`,
+        params: query,
+      }),
+      providesTags: ["Product"],
+    }),
+    absoluteDeleteProduct: builder.mutation({
+      query: (productId) => ({
+        url: `${PRODUCT_URL}/${productId}/force`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Product"],
     }),
   }),
 });
@@ -65,4 +81,6 @@ export const {
   useDeleteProductMutation,
   useCreateReviewMutation,
   useUploadProductImageMutation,
+  useGetRelatedProductsQuery,
+  useAbsoluteDeleteProductMutation,
 } = productApiSlice;
