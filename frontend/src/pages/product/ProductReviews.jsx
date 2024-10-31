@@ -8,10 +8,8 @@ const ProductReviews = ({ product }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const reviewsPerPage = 5;
 
-  // Tính toán số lượng trang dựa trên số lượng đánh giá và reviewsPerPage
   const totalPages = Math.ceil(product?.reviews?.length / reviewsPerPage) || 0;
 
-  // Lấy các đánh giá tương ứng với trang hiện tại
   const currentReviews =
     product?.reviews?.slice(
       (currentPage - 1) * reviewsPerPage,
@@ -48,7 +46,7 @@ const ProductReviews = ({ product }) => {
             <div className="flex gap-4 mt-3">
               {review.images.map((img, index) => (
                 <img
-                  src={`http://localhost:8080${img}`}
+                  src={`${import.meta.env.VITE_API_URL}${img}`}
                   key={index}
                   alt=""
                   className="object-cover w-20"

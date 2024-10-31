@@ -239,7 +239,7 @@ function ImageList({ images = [] }) {
             <img
               onClick={() => setMainImg(index)}
               key={index}
-              src={`http://localhost:8080${images[index]}`}
+              src={`${import.meta.env.VITE_API_URL}${img}`}
               className="w-16 h-16 cursor-pointer hover:opacity-80"
             />
           );
