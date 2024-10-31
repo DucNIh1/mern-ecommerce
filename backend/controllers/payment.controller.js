@@ -60,8 +60,7 @@ export const createOrder = catchAsync(async (req, res, next) => {
     amount: totalPrice,
     //khi thanh toán xong, zalopay server sẽ POST đến url này để thông báo cho server của mình
     //Chú ý: cần dùng ngrok để public url thì Zalopay Server mới call đến được
-    callback_url:
-      "https://eb59-1-54-213-79.ngrok-free.app/api/payment/callback-order",
+    callback_url: process.env.ZALO_CALLBACK_API,
     description: `Zalo - Payment for the order #${transID}`,
   };
 
