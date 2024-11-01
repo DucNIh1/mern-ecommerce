@@ -38,7 +38,7 @@ const SearchProduct = ({ products = [] }) => {
             key={product._id}
           >
             <img
-              src={`http://localhost:8080${product.images[0]}`}
+              src={`${import.meta.env.VITE_API_URL}${product.images[0]}`}
               alt=""
               className="w-12 h-12"
             />
