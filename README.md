@@ -1,1 +1,2 @@
-Account demo: ducninh10x03@gmail.com Pass: 12345678
+Account demo: admin@gmail.com Pass: 12345678
+
